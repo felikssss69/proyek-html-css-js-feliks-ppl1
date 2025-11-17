@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo App Responsif</title>
+  <style>
+    :root{
+      --bg:#f4f7fb;
+      --card:#ffffff;
+      --accent:#2563eb;
+      --muted:#6b7280;
+      --success:#10b981;
+      --danger:#ef4444;
+      --max-width:980px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background:linear-gradient(180deg,var(--bg),#eef2ff);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+
+    /* Card */
+    .card{
+      width:100%;
+      max-width:var(--max-width);
+      background:var(--card);
+      border-radius:14px;
+      box-shadow:0 12px 40px rgba(16,24,40,0.08);
+      padding:28px;
+      display:grid;
+      grid-template-columns: 1fr 360px;
+      gap:20px;
+      align-items:start;
+    }
+
+    /* Left area (main) */
+    .main{
+      min-width:0;
+    }
+
+    h1{
+      margin:0 0 12px 0;
+      font-size:1.6rem;
+      color:#0f172a;
+    }
+
+    .todo-form{
+      display:flex;
+      gap:10px;
+      margin-bottom:14px;
+    }
+
+    #todo-input{
+      flex:1;
+      padding:12px 14px;
+      border:1px solid #e6e9ef;
+      border-radius:10px;
+      font-size:1rem;
+      outline:none;
+    }
+
+    #add-btn{
+      background:var(--accent);
+      color:#fff;
+      border:none;
+      padding:10px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:600;
+    }
+
+    .controls{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:12px;
+      color:var(--muted);
+      font-size:0.95rem;
+    }
+
+    #clear-completed{
+      background:transparent;
+      border:1px solid #e6e9ef;
+      padding:6px 10px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+
+    .todo-list{
+      list-style:none;
+      padding:0;
+      margin:0;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      max-height:56vh;
+      overflow:auto;
+      padding-right:6px;
+    }
+
+    .todo-item{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #f0f3f7;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+      transition:transform .12s ease, box-shadow .12s ease;
+    }
+
+    .todo-item:hover{ transform:translateY(-3px); box-shadow:0 8px 20px rgba(16,24,40,0.06); }
+
+    .todo-text{
+      flex:1;
+      font-size:1rem;
+      color:#0f172a;
+      word-break:break-word;
+    }
+
+    .todo-text.completed{
+      color:var(--muted);
+      text-decoration:line-through;
+    }
+
+    .btn-icon{
+      background:transparent;
+      border:none;
+      cursor:pointer;
+      padding:6px;
+      border-radius:8px;
+      font-size:1rem;
+    }
+
+    .btn-icon:hover{background:#f3f4f6}
+
+    .delete{ color:var(--danger) }
+    .check{ color:var(--success) }
+
+    /* Right area (summary / filters) */
+    .sidebar{
+      background:linear-gradient(180deg,#fbfdff,#ffffff);
+      border-radius:12px;
+      padding:14px;
+      border:1px solid #eef2ff;
+      height:fit-content;
+      position:sticky;
+      top:32px;
+    }
+
+    .stats{ display:flex; gap:8px; align-items:center; margin-bottom:12px; font-weight:600; color:#0f172a }
+    .filters{ display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap }
+    .filter-btn{
+      padding:8px 10px;
+      border-radius:10px;
+      background:transparent;
+      border:1px solid #e6e9ef;
+      cursor:pointer;
+      font-weight:600;
+    }
+    .filter-btn.active{ background:var(--accent); color:#fff; border-color:var(--accent) }
+
+    .empty{
+      padding:18px;
+      text-align:center;
+      color:var(--muted);
+      border-radius:8px;
+      border:1px dashed #eef2ff;
+      background:linear-gradient(180deg,#ffffff,#fbfdff);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 980px){
+      .card{ grid-template-columns: 1fr; padding:20px; gap:14px; }
+      body{ padding:20px; }
+      .sidebar{ position:relative; top:auto; }
+    }
+
+    @media (max-width: 480px){
+      body{ padding:12px; }
+      .card{ padding:14px; gap:12px; border-radius:10px; }
+      h1{ font-size:1.25rem }
+      #todo-input{ padding:10px 12px; }
+      #add-btn{ padding:8px 10px }
+      .todo-item{ padding:8px 10px; gap:8px; border-radius:10px }
+      .filters{ gap:6px }
+      .filter-btn{ padding:7px 8px; font-size:0.95rem }
+    }
+
+    /* small visual improvements */
+    ::-webkit-scrollbar{ width:8px; height:8px }
+    ::-webkit-scrollbar-thumb{ background:#e6e9ef; border-radius:8px }
+  </style>
+</head>
+<body>
+  <div class="card" role="application" aria-label="Todo app">
+    <section class="main" aria-labelledby="title">
+      <h1 id="title">Todo App</h1>
+
+      <form id="todo-form" class="todo-form" autocomplete="off">
+        <input id="todo-input" type="text" placeholder="Tambahkan tugas baru..." aria-label="Masukkan tugas" />
+        <button type="submit" id="add-btn">Tambah</button>
+      </form>
+
+      <div class="controls">
+        <span id="count">0 tugas</span>
+        <div style="display:flex;gap:8px">
+          <button id="clear-completed">Hapus Selesai</button>
+          <button id="clear-all" style="background:transparent;border:1px solid #f8d7da;color:var(--danger);padding:6px 10px;border-radius:8px;cursor:pointer">Hapus Semua</button>
+        </div>
+      </div>
+
+      <ul id="todo-list" class="todo-list" aria-live="polite"></ul>
+    </section>
+
+    <aside class="sidebar" aria-labelledby="summary">
+      <div id="summary" class="stats">Ringkasan</div>
+
+      <div style="margin-bottom:10px">
+        <div><strong>Sisa:</strong> <span id="remaining">0</span></div>
+        <div><strong>Total:</strong> <span id="total">0</span></div>
+        <div><strong>Selesai:</strong> <span id="done-count">0</span></div>
+      </div>
+
+      <div class="filters" role="tablist" aria-label="Filter tugas">
+        <button class="filter-btn active" data-filter="all">Semua</button>
+        <button class="filter-btn" data-filter="active">Aktif</button>
+        <button class="filter-btn" data-filter="completed">Selesai</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="empty" id="empty-note">Tambahkan tugas untuk memulai</div>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Element refs
+    const form = document.getElementById('todo-form');
+    const input = document.getElementById('todo-input');
+    const list = document.getElementById('todo-list');
+    const countEl = document.getElementById('count');
+    const remainingEl = document.getElementById('remaining');
+    const totalEl = document.getElementById('total');
+    const doneEl = document.getElementById('done-count');
+    const clearCompletedBtn = document.getElementById('clear-completed');
+    const clearAllBtn = document.getElementById('clear-all');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const emptyNote = document.getElementById('empty-note');
+
+    let todos = [];
+    let filter = 'all'; // all | active | completed
+
+    // Persistence
+    function save() {
+      try { localStorage.setItem('todos_v1', JSON.stringify(todos)); } catch {}
+    }
+    function load() {
+      try {
+        const raw = localStorage.getItem('todos_v1');
+        todos = raw ? JSON.parse(raw) : [];
+      } catch { todos = []; }
+    }
+
+    // Utilities
+    function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+    function render() {
+      list.innerHTML = '';
+      const filtered = todos.filter(t => {
+        if (filter === 'active') return !t.done;
+        if (filter === 'completed') return t.done;
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        emptyNote.style.display = todos.length ? 'none' : 'block';
+      } else {
+        emptyNote.style.display = 'none';
+      }
+
+      filtered.forEach(todo => {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        li.dataset.id = todo.id;
+
+        const checkBtn = document.createElement('button');
+        checkBtn.className = 'btn-icon check';
+        checkBtn.setAttribute('aria-label', todo.done ? 'Tandai belum selesai' : 'Tandai selesai');
+        checkBtn.textContent = todo.done ? '✔' : '◻';
+
+        const text = document.createElement('div');
+        text.className = 'todo-text' + (todo.done ? ' completed' : '');
+        text.textContent = todo.text;
+        text.title = 'Klik dua kali untuk edit';
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn-icon delete';
+        delBtn.setAttribute('aria-label', 'Hapus tugas');
+        delBtn.textContent = '🗑';
+
+        // Toggle done
+        checkBtn.addEventListener('click', () => {
+          toggleDone(todo.id);
+        });
+
+        // Delete
+        delBtn.addEventListener('click', () => {
+          removeTodo(todo.id);
+        });
+
+        // Double click to edit
+        text.addEventListener('dblclick', () => {
+          startEdit(todo.id, text);
+        });
+
+        li.appendChild(checkBtn);
+        li.appendChild(text);
+        li.appendChild(delBtn);
+        list.appendChild(li);
+      });
+
+      updateStats();
+    }
+
+    function updateStats(){
+      const total = todos.length;
+      const done = todos.filter(t => t.done).length;
+      const remaining = total - done;
+      countEl.textContent = `${remaining} tugas tersisa`;
+      remainingEl.textContent = remaining;
+      totalEl.textContent = total;
+      doneEl.textContent = done;
+      // update filter active class
+      filterButtons.forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+    }
+
+    function addTodo(text){
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const todo = { id: uid(), text: trimmed, done: false };
+      todos.unshift(todo);
+      save();
+      render();
+    }
+
+    function toggleDone(id){
+      todos = todos.map(t => t.id === id ? {...t, done: !t.done} : t);
+      save();
+      render();
+    }
+
+    function removeTodo(id){
+      todos = todos.filter(t => t.id !== id);
+      save();
+      render();
+    }
+
+    function clearCompleted(){
+      todos = todos.filter(t => !t.done);
+      save();
+      render();
+    }
+
+    function clearAll(){
+      if (!confirm('Yakin hapus semua tugas?')) return;
+      todos = [];
+      save();
+      render();
+    }
+
+    function startEdit(id, textNode){
+      const todo = todos.find(t => t.id === id);
+      if (!todo) return;
+      const inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.value = todo.text;
+      inputEl.style.width = '100%';
+      inputEl.style.padding = '6px 8px';
+      inputEl.style.borderRadius = '8px';
+      inputEl.style.border = '1px solid #e6e9ef';
+      textNode.replaceWith(inputEl);
+      inputEl.focus();
+      inputEl.select();
+
+      function finish(saveChange){
+        const newNode = document.createElement('div');
+        newNode.className = 'todo-text' + (saveChange && todo.done ? ' completed' : '');
+        newNode.textContent = saveChange ? inputEl.value.trim() || todo.text : todo.text;
+        newNode.title = 'Klik dua kali untuk edit';
+        inputEl.replaceWith(newNode);
+        // apply change
+        if (saveChange){
+          todo.text = newNode.textContent;
+          save();
+          render();
+        } else {
+          render();
+        }
+      }
+
+      inputEl.addEventListener('blur', () => finish(true));
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { finish(true); }
+        if (e.key === 'Escape') { finish(false); }
+      });
+    }
+
+    // Events
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      addTodo(input.value);
+      input.value = '';
+      input.focus();
+    });
+
+    clearCompletedBtn.addEventListener('click', clearCompleted);
+    clearAllBtn.addEventListener('click', clearAll);
+
+    filterButtons.forEach(b => {
+      b.addEventListener('click', () => {
+        filter = b.dataset.filter;
+        render();
+      });
+    });
+
+    // Init
+    load();
+    render();
+  </script>
+</body>
+</html>
